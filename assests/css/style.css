@@ -1,0 +1,71 @@
+body{
+    background-color: black;
+}
+
+h2{font-size: 25px;
+    font-family: cursive;
+    color: white;
+    margin: 50px;
+
+}
+
+.logo{
+    margin-left: 300px;
+    width: 900px;
+    height: 200px;
+}
+
+
+
+
+.maintext_box{
+
+margin: 0 auto;
+
+margin-left: 350px;
+margin-top: 100px;
+text-align: center;
+
+}
+
+
+.text_box1{
+    
+    border-color: white;
+    width: -350px;
+    height: 1000px;
+    margin-left: -150px;
+    margin-right: 735px;
+   margin-top: 100px;
+    padding: 50px;
+    margin-bottom: 20px;
+    border : 5px solid white;
+    border-style: dotted;
+
+    
+}
+
+.line{
+    padding: 1px;
+    border-color: white;
+    border-style: dotted;
+    border-bottom-style: none;
+
+
+}
+.text_box2{
+ 
+    height: 1000px;
+    width: 500px;
+    margin-left: 350px;
+    margin-top: -1019px;
+    margin-bottom: -90px;
+    border : 5px solid white;
+    border-right-style: dotted;
+    
+}
+
+
+
+
+
