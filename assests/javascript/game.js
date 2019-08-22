@@ -1,165 +1,191 @@
 
+// BACKGROUND ANIMATION/////////////////////////////////////
+var colors = new Array(
+    [62,35,255],
+    [60,255,60],
+    [255,35,98],
+    [45,175,230],
+    [255,0,255],
+    [255,128,0]);
+  
+  var step = 0;
+ 
+  var colorIndices = [0,1,2,3];
+  
 
-//Computer picks random word to guess
+  var gradientSpeed = 0.002;
+  
+  function updateGradient()
+  {
+    
+    if ( $===undefined ) return;
+    
+  var c0_0 = colors[colorIndices[0]];
+  var c0_1 = colors[colorIndices[1]];
+  var c1_0 = colors[colorIndices[2]];
+  var c1_1 = colors[colorIndices[3]];
+  
+  var istep = 1 - step;
+  var r1 = Math.round(istep * c0_0[0] + step * c0_1[0]);
+  var g1 = Math.round(istep * c0_0[1] + step * c0_1[1]);
+  var b1 = Math.round(istep * c0_0[2] + step * c0_1[2]);
+  var color1 = "rgb("+r1+","+g1+","+b1+")";
+  
+  var r2 = Math.round(istep * c1_0[0] + step * c1_1[0]);
+  var g2 = Math.round(istep * c1_0[1] + step * c1_1[1]);
+  var b2 = Math.round(istep * c1_0[2] + step * c1_1[2]);
+  var color2 = "rgb("+r2+","+g2+","+b2+")";
+  
+   $('#gradient').css({
+     background: "-webkit-gradient(linear, left top, right top, from("+color1+"), to("+color2+"))"}).css({
+      background: "-moz-linear-gradient(left, "+color1+" 0%, "+color2+" 100%)"});
+    
+    step += gradientSpeed;
+    if ( step >= 1 )
+    {
+      step %= 1;
+      colorIndices[0] = colorIndices[1];
+      colorIndices[2] = colorIndices[3];
+      
+     
+      colorIndices[1] = ( colorIndices[1] + Math.floor( 1 + Math.random() * (colors.length - 1))) % colors.length;
+      colorIndices[3] = ( colorIndices[3] + Math.floor( 1 + Math.random() * (colors.length - 1))) % colors.length;
+      
+    }
+  }
+  
+  setInterval(updateGradient,20);
+// //////////////////////////////////////////////////////////
 
-var selectableWords = ["thankful", "yoke", 
-"development", "sound", "groovy", "curvy", 
-"noxious", "possessive", "insidious", "ear"];
-
- // Maximum number of tries player has
-const maxTries = 10;           
-
-// Stores the letters the user guessed
-var guessedLetters = [];     
-
-/* Index of the current word in the array
-// This will be the word we actually build to match the current word
-// How many tries the player has left
-// Flag to tell if the game has started
-// Flag for 'press any key to try again'
-// How many wins has the player racked up*/
 
 
-var currentWordIndex;      
+'use strict';
+
+
+
+var words =["CAT", "DOG", "HOUSE","SHEEP", "GOAT", "SHEEP"];
+
+
+const maxTries = 10;            
+
+var guessedLetters = [];        
+var currentWordIndex;           
 var guessingWord = [];          
 var remainingGuesses = 0;       
-var gameStarted = false;        
-var hasFinished = false;             
+var hasFinished = false;            
 var wins = 0;                   
 
+var keySound = new Audio('./assets/sounds/click.wav');
+var winSound = new Audio('./assets/sounds/you-win.wav');
+var loseSound = new Audio('./assets/sounds/you-lose.wav');
 
 
+// reset button
 
-
-
-
-
-// Reset our game-level variables
 function resetGame() {
     remainingGuesses = maxTries;
-    gameStarted = false;
 
-    // Use Math.floor to round the random number down to the nearest whole.
-    currentWordIndex = Math.floor(Math.random() * (selectableWords.length));
+    currentWordIndex = Math.floor(Math.random() * (words.length));
 
-    // Clear out arrays
     guessedLetters = [];
     guessingWord = [];
 
-    // Make sure the hangman image is cleared
     document.getElementById("hangmanImage").src = "";
 
-    // Build the guessing word and clear it out
-    for (var i = 0; i < selectableWords[currentWordIndex].length; i++) {
+    for (var i = 0; i < words[currentWordIndex].length; i++) {
         guessingWord.push("_");
-    }
-    // Hide game over and win images/text
+    }   
+
     document.getElementById("pressKeyTryAgain").style.cssText= "display: none";
     document.getElementById("gameover-image").style.cssText = "display: none";
     document.getElementById("youwin-image").style.cssText = "display: none";
 
-    // Show display
     updateDisplay();
 };
 
-
-//  Updates the display on the HTML Page
 function updateDisplay() {
 
     document.getElementById("totalWins").innerText = wins;
-    document.getElementById("currentWord").innerText = "";
+
+    var guessingWordText = "";
     for (var i = 0; i < guessingWord.length; i++) {
-        document.getElementById("currentWord").innerText += guessingWord[i];
+        guessingWordText += guessingWord[i];
     }
+
+    document.getElementById("currentWord").innerText = guessingWordText;
     document.getElementById("remainingGuesses").innerText = remainingGuesses;
     document.getElementById("guessedLetters").innerText = guessedLetters;
-    if(remainingGuesses <= 0) {
-        document.getElementById("gameover-image").style.cssText = "display: block";
-        document.getElementById("pressKeyTryAgain").style.cssText = "display:block";
-        hasFinished = true;
-    }
 };
 
-// Updates the image depending on how many guesses
+
 function updateHangmanImage() {
     document.getElementById("hangmanImage").src = "assets/images/" + (maxTries - remainingGuesses) + ".png";
 };
 
+function evaluateGuess(letter) {
+    var positions = [];
 
-
-
-document.onkeydown = function(event) {
-    // If we finished a game, dump one keystroke and reset.
-    if(hasFinished) {
-        resetGame();
-        hasFinished = false;
-    } else {
-        // Check to make sure a-z was pressed.
-        if(event.keyCode >= 65 && event.keyCode <= 90) {
-            makeGuess(event.key.toLowerCase());
+    for (var i = 0; i < words[currentWordIndex].length; i++) {
+        if(words[currentWordIndex][i] === letter) {
+            positions.push(i);
         }
+    }
+
+    if (positions.length <= 0) {
+        remainingGuesses--;
+        updateHangmanImage();
+    } else {
+        for(var i = 0; i < positions.length; i++) {
+            guessingWord[positions[i]] = letter;
+        }
+    }
+};
+function checkWin() {
+    if(guessingWord.indexOf("_") === -1) {
+        document.getElementById("youwin-image").style.cssText = "display: block";
+        document.getElementById("pressKeyTryAgain").style.cssText= "display: block";
+        wins++;
+        winSound.play();
+        hasFinished = true;
     }
 };
 
 
-
-
-
+function checkLoss()
+{
+    if(remainingGuesses <= 0) {
+        loseSound.play();
+        document.getElementById("gameover-image").style.cssText = "display: block";
+        document.getElementById("pressKeyTryAgain").style.cssText = "display:block";
+        hasFinished = true;
+    }
+}
 
 
 
 function makeGuess(letter) {
     if (remainingGuesses > 0) {
-        if (!gameStarted) {
-            gameStarted = true;
-        }
-
-        // Make sure we didn't use this letter yet
         if (guessedLetters.indexOf(letter) === -1) {
             guessedLetters.push(letter);
             evaluateGuess(letter);
         }
     }
     
-    updateDisplay();
-    checkWin();
 };
 
 
-// This function takes a letter and finds all instances of 
-// appearance in the string and replaces them in the guess word.
-function evaluateGuess(letter) {
-    // Array to store positions of letters in string
-    var positions = [];
 
-    // Loop through word finding all instances of guessed letter, store the indicies in an array.
-    for (var i = 0; i < selectableWords[currentWordIndex].length; i++) {
-        if(selectableWords[currentWordIndex][i] === letter) {
-            positions.push(i);
-        }
-    }
-
-    // if there are no indicies, remove a guess and update the hangman image
-    if (positions.length <= 0) {
-        remainingGuesses--;
-        updateHangmanImage();
+document.onkeydown = function(event) {
+    if(hasFinished) {
+        resetGame();
+        hasFinished = false;
     } else {
-        // Loop through all the indicies and replace the '_' with a letter.
-        for(var i = 0; i < positions.length; i++) {
-            guessingWord[positions[i]] = letter;
+        if(event.keyCode >= 65 && event.keyCode <= 90) {
+            keySound.play();
+            makeGuess(event.key.toUpperCase());
+            updateDisplay();
+            checkWin();
+            checkLoss();
         }
-    }
-};
-
-
-
-
-
-function checkWin() {
-    if(guessingWord.indexOf("_") === -1) {
-        document.getElementById("youwin-image").style.cssText = "display: block";
-        document.getElementById("pressKeyTryAgain").style.cssText= "display: block";
-        wins++;
-        hasFinished = true;
     }
 };
